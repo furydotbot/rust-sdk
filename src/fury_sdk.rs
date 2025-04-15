@@ -51,11 +51,12 @@ pub struct BuyTokenRequest {
     pub token_address: String,
     pub sol_amount: f64,
     pub protocol: Protocol,
-    // pub affiliate_address: Option<String>,
-    // pub affiliate_fee: Option<String>,
-    // pub jito_tip_lamports: Option<u64>,
-    // pub slippage_bps: Option<u64>,
+    pub affiliate_address: Option<String>,
+    pub affiliate_fee: Option<String>,
+    pub jito_tip_lamports: Option<u64>,
+    pub slippage_bps: Option<u64>,
     pub amounts: Option<Vec<f64>>,
+    pub use_rpc: bool,
 }
 
 #[derive(Deserialize, Debug)]
@@ -92,12 +93,27 @@ pub struct TransactionSendRequest {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct TransactionSendResponse {
-    pub success: bool,
-    // Transaction signatures
-    pub results: Vec<String>,
+pub struct JitoTxResult {
+    pub jito: String,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct JitoTransactionSendResponse {
+    pub success: bool,
+    // Transaction signatures
+    pub result: JitoTxResult,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct RpcTxResult {
+    pub rpc: Vec<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct RpcTransactionSendResponse {
+    pub success: bool,
+    pub result: RpcTxResult,
+}
 
 #[derive(Deserialize, Debug)]
 pub struct ErrorResponse {
@@ -156,7 +172,11 @@ impl FurySDK {
         self.send_request("tokens/sell", data).await
     }
 
-    pub async fn transaction_send(&self, data: &TransactionSendRequest) -> Result<TransactionSendResponse, FuryError> {
+    pub async fn jito_transaction_send(&self, data: &TransactionSendRequest) -> Result<JitoTransactionSendResponse, FuryError> {
+        self.send_request("transactions/send", data).await
+    }
+
+    pub async fn rpc_transaction_send(&self, data: &TransactionSendRequest) -> Result<RpcTransactionSendResponse, FuryError> {
         self.send_request("transactions/send", data).await
     }
 

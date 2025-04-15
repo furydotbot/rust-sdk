@@ -2,11 +2,17 @@ mod fury_sdk;
 mod utils;
 
 use anyhow::Result;
-use solana_sdk::{signature::Keypair, signer::Signer};
+use solana_sdk::{native_token::sol_to_lamports, signature::Keypair, signer::Signer};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let wallets = vec![Keypair::new()];
+    // ask user for wallet private key as input and then convert it to a keypair
+    let mut input = String::new();
+    println!("Enter wallet private key: ");
+    std::io::stdin().read_line(&mut input).unwrap();
+    let wallet = Keypair::from_base58_string(input.trim());
+
+    let wallets = vec![wallet];
 
     let client = reqwest::Client::new();
     let sdk = fury_sdk::FurySDK::new(client);
@@ -15,11 +21,12 @@ async fn main() -> Result<()> {
         token_address: "Bq5nFQ82jBYcFKRzUSximpCmCg5t8L8tVMqsn612pump".to_string(),
         sol_amount: 0.001,
         protocol: fury_sdk::Protocol::Pumpfun,
-        // affiliate_address: None,
-        // affiliate_fee: None,
-        // jito_tip_lamports: Some(5000000),
-        // slippage_bps: Some(9990),
+        jito_tip_lamports: Some(sol_to_lamports(0.001)),
         amounts: None,
+        use_rpc: false,
+        affiliate_address: None,
+        affiliate_fee: None,
+        slippage_bps: None,
     }).await {
         Ok(response) => response,
         Err(err) => {
@@ -42,19 +49,16 @@ async fn main() -> Result<()> {
     println!("Signed txs:");
     println!("{:#?}", signed_txs);
 
-    // TODO: Send transaction
-    // let send_response = match sdk.transaction_send(&fury_sdk::TransactionSendRequest {
+    // match sdk.jito_transaction_send(&fury_sdk::TransactionSendRequest {
     //     transactions: signed_txs,
     //     use_rpc: false,
     // }).await {
-    //     Ok(response) => response,
+    //     Ok(response) => println!("{:#?}", response),
     //     Err(err) => {
     //         println!("{:#?}", err);
     //         return Err(anyhow::anyhow!("Failed to send transactions: {:?}", err));
     //     }
     // };
-
-    // println!("{:#?}", send_response);
 
     Ok(())
 }
