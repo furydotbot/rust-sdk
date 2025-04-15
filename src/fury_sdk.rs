@@ -44,6 +44,9 @@ pub enum Protocol {
     Auto,
 }
 
+// --------------------------------------------
+// Token buy 
+// --------------------------------------------
 #[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct BuyTokenRequest {
@@ -66,6 +69,9 @@ pub struct BuyTokenResponse {
 }
 
 
+// --------------------------------------------
+// Token sell 
+// --------------------------------------------
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SellRequest {
@@ -85,6 +91,9 @@ pub struct SellResponse {
     pub transactions: Vec<String>,
 }
 
+// --------------------------------------------
+// Transaction send 
+// --------------------------------------------
 #[derive(Serialize)]
 pub struct TransactionSendRequest {
     // Signed transactions
@@ -115,6 +124,105 @@ pub struct RpcTransactionSendResponse {
     pub result: RpcTxResult,
 }
 
+// --------------------------------------------
+// Token transfer 
+// --------------------------------------------
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenTransferRequest {
+    pub from_wallet: String,
+    pub to_wallet: String,
+    pub token_address: String,
+    pub amount: u64,
+}
+#[derive(Deserialize, Debug)]
+pub struct TokenTransferResponse {
+    pub success: bool,
+    pub transaction: String,
+}
+
+// --------------------------------------------
+// Token creation 
+// --------------------------------------------
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenCreationMetadata {
+    pub name: String,
+    pub symbol: String,
+    pub description: Option<String>,
+    pub telegram: Option<String>,
+    pub twitter: Option<String>,
+    pub website: Option<String>,
+    pub file: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenCreation {
+    pub metadata: TokenCreationMetadata,
+    pub default_sol_amount: f64,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenCreationConfig {
+    pub token_creation: TokenCreation,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokensCreateRequest {
+    pub wallet_addresses: Vec<String>,
+    pub mint_pubkey: String,
+    pub config: TokenCreationConfig,
+    pub amounts: Vec<f64>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct TokensCreateResponse {
+    pub success: bool,
+    pub token_address: String,
+    pub transactions: Vec<String>,
+}
+
+// --------------------------------------------
+// Token burn 
+// --------------------------------------------
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenBurnRequest {
+    pub wallet: String,
+    pub token_address: String,
+    pub amount: f64,
+}
+#[derive(Deserialize, Debug)]
+pub struct TokenBurnResponse {
+    pub success: bool,
+    pub transaction: String,
+}
+
+// --------------------------------------------
+// Token cleaner 
+// --------------------------------------------
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenCleanerRequest {
+    pub wallet_addresses: Vec<String>,
+    pub token_address: String,
+    pub buy_amount: f64,
+    pub hold_time: u64,
+    pub sell_percentage: u64,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct TokenCleanerResponse {
+    pub success: bool,
+    pub transactions: Vec<String>,
+}
+
+// --------------------------------------------
+// Error handling 
+// --------------------------------------------
 #[derive(Deserialize, Debug)]
 pub struct ErrorResponse {
     pub success: bool,
@@ -178,6 +286,22 @@ impl FurySDK {
 
     pub async fn rpc_transaction_send(&self, data: &TransactionSendRequest) -> Result<RpcTransactionSendResponse, FuryError> {
         self.send_request("transactions/send", data).await
+    }
+
+    pub async fn token_transfer(&self, data: &TokenTransferRequest) -> Result<TokenTransferResponse, FuryError> {
+        self.send_request("tokens/transfer", data).await
+    }
+
+    pub async fn tokens_create(&self, data: &TokensCreateRequest) -> Result<TokensCreateResponse, FuryError> {
+        self.send_request("tokens/create", data).await
+    }
+
+    pub async fn token_burn(&self, data: &TokenBurnRequest) -> Result<TokenBurnResponse, FuryError> {
+        self.send_request("tokens/burn", data).await
+    }
+
+    pub async fn token_cleaner(&self, data: &TokenCleanerRequest) -> Result<TokenCleanerResponse, FuryError> {
+        self.send_request("tokens/cleaner", data).await
     }
 
     // pub async fn 
