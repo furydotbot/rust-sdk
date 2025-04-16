@@ -1,4 +1,4 @@
-use std::{fmt::{self, Display}, str::FromStr};
+use std::{collections::HashMap, fmt::{self, Display}, str::FromStr};
 use anyhow::Result;
 
 use reqwest::Client;
@@ -221,6 +221,132 @@ pub struct TokenCleanerResponse {
 }
 
 // --------------------------------------------
+// Analytics PNL
+// --------------------------------------------
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalyticsPnlRequest {
+    pub wallet_address: String,
+    pub token_address: String,
+    pub start_date: String,
+    pub end_date: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct AnalyticsPnlResponse {
+    pub success: bool,
+    pub pnl: f64,
+    pub details: String,
+}
+
+
+// --------------------------------------------
+// Analytics Usage Stats
+// --------------------------------------------
+pub enum AnalyticsUsagePeriod {
+    Day,
+    Week,
+    Month,
+    Year,
+}
+
+impl ToString for AnalyticsUsagePeriod {
+    fn to_string(&self) -> String {
+        match self {
+            AnalyticsUsagePeriod::Day => "day".to_string(),
+            AnalyticsUsagePeriod::Week => "week".to_string(),
+            AnalyticsUsagePeriod::Month => "month".to_string(),
+            AnalyticsUsagePeriod::Year => "year".to_string(),
+        }
+    }
+}
+
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalyticsUsageStatsResponse {
+    pub success: bool,
+    pub data: AnalyticsUsageStatsData,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct AnalyticsUsageStatsData {
+    pub total_requests: u64,
+    pub avg_response_time: f64,
+    pub successful_requests: u64,
+    pub client_errors: u64,
+    pub server_errors: u64,
+}
+
+
+// --------------------------------------------
+// Analytics Usage Endpoints
+// --------------------------------------------
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalyticsUsageEndpointsResponse {
+    pub success: bool,
+    pub data: Vec<AnalyticsUsageEndpointsData>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct AnalyticsUsageEndpointsData {
+    pub endpoint: String,
+    pub request_count: u64,
+    pub avg_response_time: f64,
+    pub successful_requests: u64,
+    pub error_requests: u64,
+}
+
+
+// --------------------------------------------
+// Analytics Usage Services
+// --------------------------------------------
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalyticsUsageServicesResponse {
+    pub success: bool,
+    pub data: Vec<AnalyticsUsageServicesData>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct AnalyticsUsageServicesData {
+    pub service_id: String,
+    pub service_type: String,
+    pub usage_count: u64,
+    pub avg_response_time: f64,
+    pub successful_calls: u64,
+    pub failed_calls: u64,
+}
+
+// -------------------------------------------- 
+// Analytics Usage Daily
+// --------------------------------------------
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalyticsUsageDailyResponse {
+    pub success: bool,
+    pub data: Vec<AnalyticsUsageDailyData>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct AnalyticsUsageDailyData {
+    pub date: String,
+    pub request_count: u64,
+    pub successful_requests: u64,
+    pub error_requests: u64,
+}
+
+// --------------------------------------------
+// Health check 
+// --------------------------------------------
+#[derive(Deserialize, Debug)]
+pub struct HealthCheckResponse {
+    pub status: String,
+}
+
+// --------------------------------------------
 // Error handling 
 // --------------------------------------------
 #[derive(Deserialize, Debug)]
@@ -235,6 +361,12 @@ pub enum FuryError {
     ApiError(ErrorResponse),
     RequestError(reqwest::Error),
     Other(anyhow::Error),
+}
+
+
+#[derive(Debug, Default)]
+struct RequestOptions {
+    base_url: Option<String>,
 }
 
 impl std::fmt::Display for FuryError {
@@ -272,41 +404,72 @@ impl FurySDK {
         Self { client, base_url: base_url.to_string() }
     }
 
+    pub async fn health_check(&self) -> Result<HealthCheckResponse, FuryError> {
+        let base_url = self.base_url.clone().replace("api/", "");
+        self.send_get_request( "health", None,RequestOptions { base_url: Some(base_url) }).await
+    }
+
     pub async fn buy_token(&self, data: &BuyTokenRequest) -> Result<BuyTokenResponse, FuryError> {
-        self.send_request("tokens/buy", data).await
+        self.send_post_request("tokens/buy", data, RequestOptions { base_url: None }).await
     }
 
     pub async fn sell_token(&self, data: &SellRequest) -> Result<SellResponse, FuryError> {
-        self.send_request("tokens/sell", data).await
+        self.send_post_request("tokens/sell", data, RequestOptions { base_url: None }).await
     }
 
     pub async fn jito_transaction_send(&self, data: &TransactionSendRequest) -> Result<JitoTransactionSendResponse, FuryError> {
-        self.send_request("transactions/send", data).await
+        self.send_post_request("transactions/send", data, RequestOptions { base_url: None }).await
     }
 
     pub async fn rpc_transaction_send(&self, data: &TransactionSendRequest) -> Result<RpcTransactionSendResponse, FuryError> {
-        self.send_request("transactions/send", data).await
+        self.send_post_request("transactions/send", data, RequestOptions { base_url: None }).await
     }
 
     pub async fn token_transfer(&self, data: &TokenTransferRequest) -> Result<TokenTransferResponse, FuryError> {
-        self.send_request("tokens/transfer", data).await
+        self.send_post_request("tokens/transfer", data, RequestOptions { base_url: None }).await
     }
 
     pub async fn tokens_create(&self, data: &TokensCreateRequest) -> Result<TokensCreateResponse, FuryError> {
-        self.send_request("tokens/create", data).await
+        self.send_post_request("tokens/create", data, RequestOptions { base_url: None }).await
     }
 
     pub async fn token_burn(&self, data: &TokenBurnRequest) -> Result<TokenBurnResponse, FuryError> {
-        self.send_request("tokens/burn", data).await
+        self.send_post_request("tokens/burn", data, RequestOptions { base_url: None }).await
     }
 
     pub async fn token_cleaner(&self, data: &TokenCleanerRequest) -> Result<TokenCleanerResponse, FuryError> {
-        self.send_request("tokens/cleaner", data).await
+        self.send_post_request("tokens/cleaner", data, RequestOptions { base_url: None }).await
     }
 
-    // pub async fn 
+    pub async fn analytics_pnl(&self, data: &AnalyticsPnlRequest) -> Result<AnalyticsPnlResponse, FuryError> {
+        self.send_post_request("analytics/pnl", data, RequestOptions { base_url: None }).await
+    }
 
-    /// Generic method to send a request and handle the response
+    pub async fn analytics_usage_stats(&self, period: &AnalyticsUsagePeriod) -> Result<AnalyticsUsageStatsResponse, FuryError> {
+        let mut params = HashMap::new();
+        params.insert("period".to_string(), period.to_string());
+        self.send_get_request("analytics/usage/stats", Some(params), RequestOptions { base_url: None }).await
+    }
+
+    pub async fn analytics_usage_endpoints(&self, period: &AnalyticsUsagePeriod) -> Result<AnalyticsUsageEndpointsResponse, FuryError> {
+        let mut params = HashMap::new();
+        params.insert("period".to_string(), period.to_string());
+        self.send_get_request("analytics/usage/endpoints", Some(params), RequestOptions { base_url: None }).await
+    }
+
+    pub async fn analytics_usage_services(&self, period: &AnalyticsUsagePeriod) -> Result<AnalyticsUsageServicesResponse, FuryError> {
+        let mut params = HashMap::new();
+        params.insert("period".to_string(), period.to_string());
+        self.send_get_request("analytics/usage/services", Some(params), RequestOptions { base_url: None }).await
+    }
+
+    pub async fn analytics_usage_daily(&self, period: &AnalyticsUsagePeriod) -> Result<AnalyticsUsageDailyResponse, FuryError> {
+        let mut params = HashMap::new();
+        params.insert("period".to_string(), period.to_string());
+        self.send_get_request("analytics/usage/daily", Some(params), RequestOptions { base_url: None }).await
+    }
+
+    /// Generic method to send a POST request and handle the response
     /// 
     /// # Arguments
     /// 
@@ -317,12 +480,13 @@ impl FurySDK {
     /// 
     /// * `Ok(T)` - The successful response deserialized to type T
     /// * `Err(FuryError)` - An error occurred
-    async fn send_request<T, D>(&self, endpoint: &str, data: &D) -> Result<T, FuryError> 
+    async fn send_post_request<T, D>(&self, endpoint: &str, data: &D, options: RequestOptions) -> Result<T, FuryError> 
     where
         T: for<'de> Deserialize<'de>,
         D: Serialize,
     {
-        let response = match self.client.post(&format!("{}{}", self.base_url, endpoint))
+        let base_url = options.base_url.unwrap_or(self.base_url.clone());
+        let response = match self.client.post(&format!("{}{}", base_url, endpoint))
             .json(data)
             .send()
             .await {
@@ -330,18 +494,48 @@ impl FurySDK {
                 Err(e) => return Err(FuryError::RequestError(e)),
             };
 
+        self.process_response(response).await
+    }
+
+    /// Generic method to send a POST request and handle the response
+    /// 
+    /// # Arguments
+    /// 
+    /// * `endpoint` - The API endpoint to call
+    /// * `data` - The data to send in the request body
+    /// 
+    /// # Returns
+    /// 
+    /// * `Ok(T)` - The successful response deserialized to type T
+    /// * `Err(FuryError)` - An error occurred
+    async fn send_get_request<T>(&self, endpoint: &str, params: Option<HashMap<String, String>>, options: RequestOptions) -> Result<T, FuryError> 
+    where
+        T: for<'de> Deserialize<'de>,
+    {
+        let params = params.unwrap_or_default();
+        let base_url = options.base_url.unwrap_or(self.base_url.clone());
+        let response = match self.client.get(&format!("{}{}", base_url, endpoint))
+            .query(&params)
+            .send()
+            .await {
+                Ok(resp) => resp,
+                Err(e) => return Err(FuryError::RequestError(e)),
+            };
+
+        self.process_response(response).await
+    }
+
+    async fn process_response<T>(&self, response: reqwest::Response) -> Result<T, FuryError>
+    where
+        T: for<'de> Deserialize<'de>,
+    {
         if response.status().is_success() {
-            // Deserialize successful response
             match response.json().await {
                 Ok(body) => Ok(body),
                 Err(e) => Err(FuryError::RequestError(e)),
             }
         } else {
-            // Try to deserialize error response
-            match response.json().await {
-                Ok(error) => Err(FuryError::ApiError(error)),
-                Err(e) => Err(FuryError::RequestError(e)),
-            }
+            Err(FuryError::ApiError(response.json().await.unwrap()))
         }
     }
 }
