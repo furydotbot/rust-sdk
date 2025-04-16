@@ -792,7 +792,6 @@ dependencies = [
  "bs58",
  "reqwest",
  "serde",
- "serde_json",
  "solana-sdk",
  "tokio",
 ]

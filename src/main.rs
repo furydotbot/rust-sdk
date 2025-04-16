@@ -49,6 +49,9 @@ async fn main() -> Result<()> {
     println!("Signed txs:");
     println!("{:#?}", signed_txs);
 
+    let mint = sdk.generate_mint().await;
+    println!("{:#?}", mint);
+
     // match sdk.jito_transaction_send(&fury_sdk::TransactionSendRequest {
     //     transactions: signed_txs,
     //     use_rpc: false,
