@@ -1,8 +1,12 @@
-use std::{collections::HashMap, fmt::{self, Display}, str::FromStr};
 use anyhow::Result;
+use std::{
+    collections::HashMap,
+    fmt::{self, Display},
+    str::FromStr,
+};
 
 use reqwest::Client;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 impl FromStr for Protocol {
     type Err = anyhow::Error;
@@ -45,7 +49,7 @@ pub enum Protocol {
 }
 
 // --------------------------------------------
-// Token buy 
+// Token buy
 // --------------------------------------------
 #[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -68,9 +72,8 @@ pub struct BuyTokenResponse {
     pub transactions: Vec<String>,
 }
 
-
 // --------------------------------------------
-// Token sell 
+// Token sell
 // --------------------------------------------
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -92,7 +95,7 @@ pub struct SellResponse {
 }
 
 // --------------------------------------------
-// Transaction send 
+// Transaction send
 // --------------------------------------------
 #[derive(Serialize)]
 pub struct TransactionSendRequest {
@@ -125,7 +128,7 @@ pub struct RpcTransactionSendResponse {
 }
 
 // --------------------------------------------
-// Token transfer 
+// Token transfer
 // --------------------------------------------
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -142,7 +145,7 @@ pub struct TokenTransferResponse {
 }
 
 // --------------------------------------------
-// Token creation 
+// Token creation
 // --------------------------------------------
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -186,7 +189,7 @@ pub struct TokensCreateResponse {
 }
 
 // --------------------------------------------
-// Token burn 
+// Token burn
 // --------------------------------------------
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -202,7 +205,7 @@ pub struct TokenBurnResponse {
 }
 
 // --------------------------------------------
-// Token cleaner 
+// Token cleaner
 // --------------------------------------------
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -240,7 +243,6 @@ pub struct AnalyticsPnlResponse {
     pub details: String,
 }
 
-
 // --------------------------------------------
 // Analytics Usage Stats
 // --------------------------------------------
@@ -262,7 +264,6 @@ impl ToString for AnalyticsUsagePeriod {
     }
 }
 
-
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AnalyticsUsageStatsResponse {
@@ -278,7 +279,6 @@ pub struct AnalyticsUsageStatsData {
     pub client_errors: u64,
     pub server_errors: u64,
 }
-
 
 // --------------------------------------------
 // Analytics Usage Endpoints
@@ -298,7 +298,6 @@ pub struct AnalyticsUsageEndpointsData {
     pub successful_requests: u64,
     pub error_requests: u64,
 }
-
 
 // --------------------------------------------
 // Analytics Usage Services
@@ -320,7 +319,7 @@ pub struct AnalyticsUsageServicesData {
     pub failed_calls: u64,
 }
 
-// -------------------------------------------- 
+// --------------------------------------------
 // Analytics Usage Daily
 // --------------------------------------------
 #[derive(Deserialize, Debug)]
@@ -339,7 +338,7 @@ pub struct AnalyticsUsageDailyData {
 }
 
 // --------------------------------------------
-// Health check 
+// Health check
 // --------------------------------------------
 #[derive(Deserialize, Debug)]
 pub struct HealthCheckResponse {
@@ -347,7 +346,53 @@ pub struct HealthCheckResponse {
 }
 
 // --------------------------------------------
-// Error handling 
+// Generate mint
+// --------------------------------------------
+#[derive(Deserialize, Debug)]
+pub struct GenerateMintResponse {
+    pub success: bool,
+    #[serde(rename = "mintKey")]
+    pub mint_key: String,
+}
+
+// --------------------------------------------
+// Wallets distribute
+// --------------------------------------------
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WalletsDistributeRequest {
+    pub from_wallet: String,
+    pub to_wallets: Vec<String>,
+    pub token_address: String,
+    pub amounts: Vec<f64>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct WalletsDistributeResponse {
+    pub success: bool,
+    pub transactions: Vec<String>,
+}
+
+// --------------------------------------------
+// Wallets consolidate
+// --------------------------------------------
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WalletsConsolidateRequest {
+    pub from_wallets: Vec<String>,
+    pub to_wallet: String,
+    pub token_address: String,
+    pub percentage: u64,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct WalletsConsolidateResponse {
+    pub success: bool,
+    pub transactions: Vec<String>,
+}
+
+// --------------------------------------------
+// Error handling
 // --------------------------------------------
 #[derive(Deserialize, Debug)]
 pub struct ErrorResponse {
@@ -363,7 +408,6 @@ pub enum FuryError {
     Other(anyhow::Error),
 }
 
-
 #[derive(Debug, Default)]
 struct RequestOptions {
     base_url: Option<String>,
@@ -374,14 +418,20 @@ impl std::fmt::Display for FuryError {
         match self {
             FuryError::ApiError(error) => {
                 if let Some(details) = &error.details {
-                    write!(f, "API error: {}: {}", 
-                        error.error.as_deref().unwrap_or("Unknown error"), 
-                        details)
+                    write!(
+                        f,
+                        "API error: {}: {}",
+                        error.error.as_deref().unwrap_or("Unknown error"),
+                        details
+                    )
                 } else {
-                    write!(f, "API error: {}", 
-                        error.error.as_deref().unwrap_or("Unknown error"))
+                    write!(
+                        f,
+                        "API error: {}",
+                        error.error.as_deref().unwrap_or("Unknown error")
+                    )
                 }
-            },
+            }
             FuryError::RequestError(e) => write!(f, "Request error: {}", e),
             FuryError::Other(e) => write!(f, "Error: {}", e),
         }
@@ -397,130 +447,242 @@ pub struct FurySDK {
 
 impl FurySDK {
     pub fn new(client: Client) -> Self {
-        Self { client, base_url: "https://solana.fury.bot/api/".to_string() }
+        Self {
+            client,
+            base_url: "https://solana.fury.bot/api/".to_string(),
+        }
     }
-    
+
     pub fn new_with_base_url(client: Client, base_url: &str) -> Self {
-        Self { client, base_url: base_url.to_string() }
+        Self {
+            client,
+            base_url: base_url.to_string(),
+        }
     }
 
     pub async fn health_check(&self) -> Result<HealthCheckResponse, FuryError> {
         let base_url = self.base_url.clone().replace("api/", "");
-        self.send_get_request( "health", None,RequestOptions { base_url: Some(base_url) }).await
+        self.send_get_request(
+            "health",
+            None,
+            RequestOptions {
+                base_url: Some(base_url),
+            },
+        )
+        .await
     }
 
     pub async fn buy_token(&self, data: &BuyTokenRequest) -> Result<BuyTokenResponse, FuryError> {
-        self.send_post_request("tokens/buy", data, RequestOptions { base_url: None }).await
+        self.send_post_request("tokens/buy", data, RequestOptions::default())
+            .await
     }
 
     pub async fn sell_token(&self, data: &SellRequest) -> Result<SellResponse, FuryError> {
-        self.send_post_request("tokens/sell", data, RequestOptions { base_url: None }).await
+        self.send_post_request("tokens/sell", data, RequestOptions::default())
+            .await
     }
 
-    pub async fn jito_transaction_send(&self, data: &TransactionSendRequest) -> Result<JitoTransactionSendResponse, FuryError> {
-        self.send_post_request("transactions/send", data, RequestOptions { base_url: None }).await
+    pub async fn jito_transaction_send(
+        &self,
+        data: &TransactionSendRequest,
+    ) -> Result<JitoTransactionSendResponse, FuryError> {
+        self.send_post_request("transactions/send", data, RequestOptions::default())
+            .await
     }
 
-    pub async fn rpc_transaction_send(&self, data: &TransactionSendRequest) -> Result<RpcTransactionSendResponse, FuryError> {
-        self.send_post_request("transactions/send", data, RequestOptions { base_url: None }).await
+    pub async fn rpc_transaction_send(
+        &self,
+        data: &TransactionSendRequest,
+    ) -> Result<RpcTransactionSendResponse, FuryError> {
+        self.send_post_request("transactions/send", data, RequestOptions::default())
+            .await
     }
 
-    pub async fn token_transfer(&self, data: &TokenTransferRequest) -> Result<TokenTransferResponse, FuryError> {
-        self.send_post_request("tokens/transfer", data, RequestOptions { base_url: None }).await
+    pub async fn token_transfer(
+        &self,
+        data: &TokenTransferRequest,
+    ) -> Result<TokenTransferResponse, FuryError> {
+        self.send_post_request("tokens/transfer", data, RequestOptions::default())
+            .await
     }
 
-    pub async fn tokens_create(&self, data: &TokensCreateRequest) -> Result<TokensCreateResponse, FuryError> {
-        self.send_post_request("tokens/create", data, RequestOptions { base_url: None }).await
+    pub async fn tokens_create(
+        &self,
+        data: &TokensCreateRequest,
+    ) -> Result<TokensCreateResponse, FuryError> {
+        self.send_post_request("tokens/create", data, RequestOptions::default())
+            .await
     }
 
-    pub async fn token_burn(&self, data: &TokenBurnRequest) -> Result<TokenBurnResponse, FuryError> {
-        self.send_post_request("tokens/burn", data, RequestOptions { base_url: None }).await
+    pub async fn token_burn(
+        &self,
+        data: &TokenBurnRequest,
+    ) -> Result<TokenBurnResponse, FuryError> {
+        self.send_post_request("tokens/burn", data, RequestOptions::default())
+            .await
     }
 
-    pub async fn token_cleaner(&self, data: &TokenCleanerRequest) -> Result<TokenCleanerResponse, FuryError> {
-        self.send_post_request("tokens/cleaner", data, RequestOptions { base_url: None }).await
+    pub async fn token_cleaner(
+        &self,
+        data: &TokenCleanerRequest,
+    ) -> Result<TokenCleanerResponse, FuryError> {
+        self.send_post_request("tokens/cleaner", data, RequestOptions::default())
+            .await
     }
 
-    pub async fn analytics_pnl(&self, data: &AnalyticsPnlRequest) -> Result<AnalyticsPnlResponse, FuryError> {
-        self.send_post_request("analytics/pnl", data, RequestOptions { base_url: None }).await
+    pub async fn analytics_pnl(
+        &self,
+        data: &AnalyticsPnlRequest,
+    ) -> Result<AnalyticsPnlResponse, FuryError> {
+        self.send_post_request("analytics/pnl", data, RequestOptions::default())
+            .await
     }
 
-    pub async fn analytics_usage_stats(&self, period: &AnalyticsUsagePeriod) -> Result<AnalyticsUsageStatsResponse, FuryError> {
+    pub async fn analytics_usage_stats(
+        &self,
+        period: &AnalyticsUsagePeriod,
+    ) -> Result<AnalyticsUsageStatsResponse, FuryError> {
         let mut params = HashMap::new();
         params.insert("period".to_string(), period.to_string());
-        self.send_get_request("analytics/usage/stats", Some(params), RequestOptions { base_url: None }).await
+        self.send_get_request(
+            "analytics/usage/stats",
+            Some(params),
+            RequestOptions::default(),
+        )
+        .await
     }
 
-    pub async fn analytics_usage_endpoints(&self, period: &AnalyticsUsagePeriod) -> Result<AnalyticsUsageEndpointsResponse, FuryError> {
+    pub async fn analytics_usage_endpoints(
+        &self,
+        period: &AnalyticsUsagePeriod,
+    ) -> Result<AnalyticsUsageEndpointsResponse, FuryError> {
         let mut params = HashMap::new();
         params.insert("period".to_string(), period.to_string());
-        self.send_get_request("analytics/usage/endpoints", Some(params), RequestOptions { base_url: None }).await
+        self.send_get_request(
+            "analytics/usage/endpoints",
+            Some(params),
+            RequestOptions::default(),
+        )
+        .await
     }
 
-    pub async fn analytics_usage_services(&self, period: &AnalyticsUsagePeriod) -> Result<AnalyticsUsageServicesResponse, FuryError> {
+    pub async fn analytics_usage_services(
+        &self,
+        period: &AnalyticsUsagePeriod,
+    ) -> Result<AnalyticsUsageServicesResponse, FuryError> {
         let mut params = HashMap::new();
         params.insert("period".to_string(), period.to_string());
-        self.send_get_request("analytics/usage/services", Some(params), RequestOptions { base_url: None }).await
+        self.send_get_request(
+            "analytics/usage/services",
+            Some(params),
+            RequestOptions::default(),
+        )
+        .await
     }
 
-    pub async fn analytics_usage_daily(&self, period: &AnalyticsUsagePeriod) -> Result<AnalyticsUsageDailyResponse, FuryError> {
+    pub async fn analytics_usage_daily(
+        &self,
+        period: &AnalyticsUsagePeriod,
+    ) -> Result<AnalyticsUsageDailyResponse, FuryError> {
         let mut params = HashMap::new();
         params.insert("period".to_string(), period.to_string());
-        self.send_get_request("analytics/usage/daily", Some(params), RequestOptions { base_url: None }).await
+        self.send_get_request(
+            "analytics/usage/daily",
+            Some(params),
+            RequestOptions::default(),
+        )
+        .await
+    }
+
+    pub async fn generate_mint(&self) -> Result<GenerateMintResponse, FuryError> {
+        self.send_get_request("utilities/generate-mint", None, RequestOptions::default())
+            .await
+    }
+
+    pub async fn wallets_distribute(
+        &self,
+        data: &WalletsDistributeRequest,
+    ) -> Result<WalletsDistributeResponse, FuryError> {
+        self.send_post_request("wallets/distribute", data, RequestOptions::default())
+            .await
+    }
+
+    pub async fn wallets_consolidate(
+        &self,
+        data: &WalletsConsolidateRequest,
+    ) -> Result<WalletsConsolidateResponse, FuryError> {
+        self.send_post_request("wallets/consolidate", data, RequestOptions::default())
+            .await
     }
 
     /// Generic method to send a POST request and handle the response
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `endpoint` - The API endpoint to call
     /// * `data` - The data to send in the request body
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(T)` - The successful response deserialized to type T
     /// * `Err(FuryError)` - An error occurred
-    async fn send_post_request<T, D>(&self, endpoint: &str, data: &D, options: RequestOptions) -> Result<T, FuryError> 
+    async fn send_post_request<T, D>(
+        &self,
+        endpoint: &str,
+        data: &D,
+        options: RequestOptions,
+    ) -> Result<T, FuryError>
     where
         T: for<'de> Deserialize<'de>,
         D: Serialize,
     {
         let base_url = options.base_url.unwrap_or(self.base_url.clone());
-        let response = match self.client.post(&format!("{}{}", base_url, endpoint))
+        let response = match self
+            .client
+            .post(&format!("{}{}", base_url, endpoint))
             .json(data)
             .send()
-            .await {
-                Ok(resp) => resp,
-                Err(e) => return Err(FuryError::RequestError(e)),
-            };
+            .await
+        {
+            Ok(resp) => resp,
+            Err(e) => return Err(FuryError::RequestError(e)),
+        };
 
         self.process_response(response).await
     }
 
     /// Generic method to send a POST request and handle the response
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `endpoint` - The API endpoint to call
     /// * `data` - The data to send in the request body
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(T)` - The successful response deserialized to type T
     /// * `Err(FuryError)` - An error occurred
-    async fn send_get_request<T>(&self, endpoint: &str, params: Option<HashMap<String, String>>, options: RequestOptions) -> Result<T, FuryError> 
+    async fn send_get_request<T>(
+        &self,
+        endpoint: &str,
+        params: Option<HashMap<String, String>>,
+        options: RequestOptions,
+    ) -> Result<T, FuryError>
     where
         T: for<'de> Deserialize<'de>,
     {
         let params = params.unwrap_or_default();
         let base_url = options.base_url.unwrap_or(self.base_url.clone());
-        let response = match self.client.get(&format!("{}{}", base_url, endpoint))
+        let response = match self
+            .client
+            .get(&format!("{}{}", base_url, endpoint))
             .query(&params)
             .send()
-            .await {
-                Ok(resp) => resp,
-                Err(e) => return Err(FuryError::RequestError(e)),
-            };
+            .await
+        {
+            Ok(resp) => resp,
+            Err(e) => return Err(FuryError::RequestError(e)),
+        };
 
         self.process_response(response).await
     }
