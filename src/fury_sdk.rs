@@ -49,6 +49,134 @@ pub enum Protocol {
 }
 
 // --------------------------------------------
+// Analytics PNL
+// --------------------------------------------
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalyticsPnlOptions {
+    pub include_timestamp: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalyticsPnlRequest {
+    pub addresses: String,
+    pub token_address: String,
+    pub options: AnalyticsPnlOptions,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct AnalyticsPnlData {
+    pub profit: f64,
+    pub timestamp: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub struct AnalyticsPnlResponse {
+    pub success: bool,
+    // Where key is wallet address and value is details
+    pub data: HashMap<String, AnalyticsPnlData>,
+}
+
+// --------------------------------------------
+// Analytics Usage Stats
+// --------------------------------------------
+// pub enum AnalyticsUsagePeriod {
+//     Day,
+//     Week,
+//     Month,
+//     Year,
+// }
+
+// impl ToString for AnalyticsUsagePeriod {
+//     fn to_string(&self) -> String {
+//         match self {
+//             AnalyticsUsagePeriod::Day => "day".to_string(),
+//             AnalyticsUsagePeriod::Week => "week".to_string(),
+//             AnalyticsUsagePeriod::Month => "month".to_string(),
+//             AnalyticsUsagePeriod::Year => "year".to_string(),
+//         }
+//     }
+// }
+
+// #[derive(Deserialize, Debug)]
+// #[serde(rename_all = "snake_case")]
+// pub struct AnalyticsUsageStatsResponse {
+//     pub success: bool,
+//     pub data: AnalyticsUsageStatsData,
+// }
+
+// #[derive(Deserialize, Debug)]
+// #[serde(rename_all = "snake_case")]
+// pub struct AnalyticsUsageStatsData {
+//     pub total_requests: u64,
+//     pub avg_response_time: f64,
+//     pub successful_requests: u64,
+//     pub client_errors: u64,
+//     pub server_errors: u64,
+// }
+
+// // --------------------------------------------
+// // Analytics Usage Endpoints
+// // --------------------------------------------
+// #[derive(Deserialize, Debug)]
+// #[serde(rename_all = "snake_case")]
+// pub struct AnalyticsUsageEndpointsResponse {
+//     pub success: bool,
+//     pub data: Vec<AnalyticsUsageEndpointsData>,
+// }
+
+// #[derive(Deserialize, Debug)]
+// pub struct AnalyticsUsageEndpointsData {
+//     pub endpoint: String,
+//     pub request_count: u64,
+//     pub avg_response_time: f64,
+//     pub successful_requests: u64,
+//     pub error_requests: u64,
+// }
+
+// // --------------------------------------------
+// // Analytics Usage Services
+// // --------------------------------------------
+// #[derive(Deserialize, Debug)]
+// #[serde(rename_all = "snake_case")]
+// pub struct AnalyticsUsageServicesResponse {
+//     pub success: bool,
+//     pub data: Vec<AnalyticsUsageServicesData>,
+// }
+
+// #[derive(Deserialize, Debug)]
+// #[serde(rename_all = "snake_case")]
+// pub struct AnalyticsUsageServicesData {
+//     pub service_id: String,
+//     pub service_type: String,
+//     pub usage_count: u64,
+//     pub avg_response_time: f64,
+//     pub successful_calls: u64,
+//     pub failed_calls: u64,
+// }
+
+// // --------------------------------------------
+// // Analytics Usage Daily
+// // --------------------------------------------
+// #[derive(Deserialize, Debug)]
+// #[serde(rename_all = "snake_case")]
+// pub struct AnalyticsUsageDailyResponse {
+//     pub success: bool,
+//     pub data: Vec<AnalyticsUsageDailyData>,
+// }
+
+// #[derive(Deserialize, Debug)]
+// pub struct AnalyticsUsageDailyData {
+//     pub date: String,
+//     pub request_count: u64,
+//     pub successful_requests: u64,
+//     pub error_requests: u64,
+// }
+
+// --------------------------------------------
 // Token buy
 // --------------------------------------------
 #[derive(Serialize, Debug)]
@@ -62,11 +190,12 @@ pub struct BuyTokenRequest {
     pub affiliate_fee: Option<String>,
     pub jito_tip_lamports: Option<u64>,
     pub slippage_bps: Option<u64>,
-    pub amounts: Option<Vec<f64>>,
-    pub use_rpc: bool,
+    pub amounts: Option<Vec<f64>>, // TODO: maybe remove
+    pub use_rpc: bool, // TODO: maybe remove
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub struct BuyTokenResponse {
     pub success: bool,
     pub transactions: Vec<String>,
@@ -89,7 +218,131 @@ pub struct SellRequest {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub struct SellResponse {
+    pub success: bool,
+    pub transactions: Vec<String>,
+}
+
+// --------------------------------------------
+// Token transfer
+// --------------------------------------------
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenTransferRequest {
+    pub sender_public_key: String,
+    pub receiver: String,
+    pub token_address: String,
+    pub amount: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub struct TokenTransferResponse {
+    pub success: bool,
+    pub data: TokenTransferData,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub struct TokenTransferData {
+    pub transaction: String,
+    pub blockhash: String,
+    pub last_valid_block_height: u64,
+    pub transfer_type: String,
+}
+
+// --------------------------------------------
+// Token creation
+// --------------------------------------------
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokensCreateRequest {
+    pub wallet_addresses: Vec<String>,
+    pub mint_pubkey: String,
+    pub config: TokenCreationConfig,
+    pub amounts: Vec<f64>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenCreationConfig {
+    pub token_creation: TokenCreation,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenCreation {
+    pub metadata: TokenCreationMetadata,
+    pub default_sol_amount: f64,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenCreationMetadata {
+    pub name: String,
+    pub symbol: String,
+    pub description: Option<String>,
+    pub telegram: Option<String>,
+    pub twitter: Option<String>,
+    pub website: Option<String>,
+    pub file: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub struct TokensCreateResponse {
+    pub success: bool,
+    pub transactions: Vec<String>,
+}
+
+// --------------------------------------------
+// Token burn
+// --------------------------------------------
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenBurnRequest {
+    pub wallet_public_key: String,
+    pub token_address: String,
+    pub amount: f64,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub struct TokenBurnData {
+    pub transaction: String,
+    pub blockhash: String,
+    pub amount: f64,
+    pub decimals: u64,
+    pub token_mint: String,
+    pub associated_token_address: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub struct TokenBurnResponse {
+    pub success: bool,
+    pub data: TokenBurnData,
+}
+
+// --------------------------------------------
+// Token cleaner
+// --------------------------------------------
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenCleanerRequest {
+    pub seller_address: String,
+    pub buyer_address: String,
+    pub token_address: String,
+    pub sell_percentage: f64,
+    pub buy_percentage: f64,
+    pub wallet_addresses: Vec<String>,
+    pub buy_amount: f64, 
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub struct TokenCleanerResponse {
     pub success: bool,
     pub transactions: Vec<String>,
 }
@@ -105,11 +358,13 @@ pub struct TransactionSendRequest {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub struct JitoTxResult {
     pub jito: String,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub struct JitoTransactionSendResponse {
     pub success: bool,
     // Transaction signatures
@@ -122,225 +377,17 @@ pub struct RpcTxResult {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub struct RpcTransactionSendResponse {
     pub success: bool,
     pub result: RpcTxResult,
 }
 
 // --------------------------------------------
-// Token transfer
-// --------------------------------------------
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TokenTransferRequest {
-    pub from_wallet: String,
-    pub to_wallet: String,
-    pub token_address: String,
-    pub amount: u64,
-}
-#[derive(Deserialize, Debug)]
-pub struct TokenTransferResponse {
-    pub success: bool,
-    pub transaction: String,
-}
-
-// --------------------------------------------
-// Token creation
-// --------------------------------------------
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TokenCreationMetadata {
-    pub name: String,
-    pub symbol: String,
-    pub description: Option<String>,
-    pub telegram: Option<String>,
-    pub twitter: Option<String>,
-    pub website: Option<String>,
-    pub file: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TokenCreation {
-    pub metadata: TokenCreationMetadata,
-    pub default_sol_amount: f64,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TokenCreationConfig {
-    pub token_creation: TokenCreation,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TokensCreateRequest {
-    pub wallet_addresses: Vec<String>,
-    pub mint_pubkey: String,
-    pub config: TokenCreationConfig,
-    pub amounts: Vec<f64>,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct TokensCreateResponse {
-    pub success: bool,
-    pub token_address: String,
-    pub transactions: Vec<String>,
-}
-
-// --------------------------------------------
-// Token burn
-// --------------------------------------------
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TokenBurnRequest {
-    pub wallet: String,
-    pub token_address: String,
-    pub amount: f64,
-}
-#[derive(Deserialize, Debug)]
-pub struct TokenBurnResponse {
-    pub success: bool,
-    pub transaction: String,
-}
-
-// --------------------------------------------
-// Token cleaner
-// --------------------------------------------
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TokenCleanerRequest {
-    pub wallet_addresses: Vec<String>,
-    pub token_address: String,
-    pub buy_amount: f64,
-    pub hold_time: u64,
-    pub sell_percentage: u64,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct TokenCleanerResponse {
-    pub success: bool,
-    pub transactions: Vec<String>,
-}
-
-// --------------------------------------------
-// Analytics PNL
-// --------------------------------------------
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AnalyticsPnlRequest {
-    pub wallet_address: String,
-    pub token_address: String,
-    pub start_date: String,
-    pub end_date: String,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct AnalyticsPnlResponse {
-    pub success: bool,
-    pub pnl: f64,
-    pub details: String,
-}
-
-// --------------------------------------------
-// Analytics Usage Stats
-// --------------------------------------------
-pub enum AnalyticsUsagePeriod {
-    Day,
-    Week,
-    Month,
-    Year,
-}
-
-impl ToString for AnalyticsUsagePeriod {
-    fn to_string(&self) -> String {
-        match self {
-            AnalyticsUsagePeriod::Day => "day".to_string(),
-            AnalyticsUsagePeriod::Week => "week".to_string(),
-            AnalyticsUsagePeriod::Month => "month".to_string(),
-            AnalyticsUsagePeriod::Year => "year".to_string(),
-        }
-    }
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct AnalyticsUsageStatsResponse {
-    pub success: bool,
-    pub data: AnalyticsUsageStatsData,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct AnalyticsUsageStatsData {
-    pub total_requests: u64,
-    pub avg_response_time: f64,
-    pub successful_requests: u64,
-    pub client_errors: u64,
-    pub server_errors: u64,
-}
-
-// --------------------------------------------
-// Analytics Usage Endpoints
-// --------------------------------------------
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct AnalyticsUsageEndpointsResponse {
-    pub success: bool,
-    pub data: Vec<AnalyticsUsageEndpointsData>,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct AnalyticsUsageEndpointsData {
-    pub endpoint: String,
-    pub request_count: u64,
-    pub avg_response_time: f64,
-    pub successful_requests: u64,
-    pub error_requests: u64,
-}
-
-// --------------------------------------------
-// Analytics Usage Services
-// --------------------------------------------
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct AnalyticsUsageServicesResponse {
-    pub success: bool,
-    pub data: Vec<AnalyticsUsageServicesData>,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct AnalyticsUsageServicesData {
-    pub service_id: String,
-    pub service_type: String,
-    pub usage_count: u64,
-    pub avg_response_time: f64,
-    pub successful_calls: u64,
-    pub failed_calls: u64,
-}
-
-// --------------------------------------------
-// Analytics Usage Daily
-// --------------------------------------------
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct AnalyticsUsageDailyResponse {
-    pub success: bool,
-    pub data: Vec<AnalyticsUsageDailyData>,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct AnalyticsUsageDailyData {
-    pub date: String,
-    pub request_count: u64,
-    pub successful_requests: u64,
-    pub error_requests: u64,
-}
-
-// --------------------------------------------
 // Health check
 // --------------------------------------------
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub struct HealthCheckResponse {
     pub status: String,
 }
@@ -349,10 +396,9 @@ pub struct HealthCheckResponse {
 // Generate mint
 // --------------------------------------------
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub struct GenerateMintResponse {
-    pub success: bool,
-    #[serde(rename = "mintKey")]
-    pub mint_key: String,
+    pub pubkey: String,
 }
 
 // --------------------------------------------
@@ -360,14 +406,20 @@ pub struct GenerateMintResponse {
 // --------------------------------------------
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct WalletsDistributeRecipient {
+    pub address: String,
+    pub amount: f64,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WalletsDistributeRequest {
-    pub from_wallet: String,
-    pub to_wallets: Vec<String>,
-    pub token_address: String,
-    pub amounts: Vec<f64>,
+    pub sender: String,
+    pub recipients: Vec<WalletsDistributeRecipient>,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub struct WalletsDistributeResponse {
     pub success: bool,
     pub transactions: Vec<String>,
@@ -379,13 +431,13 @@ pub struct WalletsDistributeResponse {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WalletsConsolidateRequest {
-    pub from_wallets: Vec<String>,
-    pub to_wallet: String,
-    pub token_address: String,
-    pub percentage: u64,
+    pub source_addresses: Vec<String>,
+    pub receiver_address: String,
+    pub percentage: f64,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub struct WalletsConsolidateResponse {
     pub success: bool,
     pub transactions: Vec<String>,
@@ -395,6 +447,7 @@ pub struct WalletsConsolidateResponse {
 // Error handling
 // --------------------------------------------
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
 pub struct ErrorResponse {
     pub success: bool,
     pub error: Option<String>,
@@ -532,67 +585,75 @@ impl FurySDK {
 
     pub async fn analytics_pnl(
         &self,
-        data: &AnalyticsPnlRequest,
+        addresses: Vec<String>,
+        token_address: String,
+        options: AnalyticsPnlOptions,
     ) -> Result<AnalyticsPnlResponse, FuryError> {
-        self.send_post_request("analytics/pnl", data, RequestOptions::default())
+        let data = AnalyticsPnlRequest {
+            addresses: addresses.join(","),
+            token_address,
+            options,
+        };
+        self.send_post_request("analytics/pnl", &data, RequestOptions::default())
             .await
     }
 
-    pub async fn analytics_usage_stats(
-        &self,
-        period: &AnalyticsUsagePeriod,
-    ) -> Result<AnalyticsUsageStatsResponse, FuryError> {
-        let mut params = HashMap::new();
-        params.insert("period".to_string(), period.to_string());
-        self.send_get_request(
-            "analytics/usage/stats",
-            Some(params),
-            RequestOptions::default(),
-        )
-        .await
-    }
+    // #[deprecated]
+    // pub async fn analytics_usage_stats(
+    //     &self,
+    //     period: &AnalyticsUsagePeriod,
+    // ) -> Result<AnalyticsUsageStatsResponse, FuryError> {
+    //     let mut params = HashMap::new();
+    //     params.insert("period".to_string(), period.to_string());
+    //     self.send_get_request(
+    //         "analytics/usage/stats",
+    //         Some(params),
+    //         RequestOptions::default(),
+    //     )
+    //     .await
+    // }
 
-    pub async fn analytics_usage_endpoints(
-        &self,
-        period: &AnalyticsUsagePeriod,
-    ) -> Result<AnalyticsUsageEndpointsResponse, FuryError> {
-        let mut params = HashMap::new();
-        params.insert("period".to_string(), period.to_string());
-        self.send_get_request(
-            "analytics/usage/endpoints",
-            Some(params),
-            RequestOptions::default(),
-        )
-        .await
-    }
+    // pub async fn analytics_usage_endpoints(
+    //     &self,
+    //     period: &AnalyticsUsagePeriod,
+    // ) -> Result<AnalyticsUsageEndpointsResponse, FuryError> {
+    //     let mut params = HashMap::new();
+    //     params.insert("period".to_string(), period.to_string());
+    //     self.send_get_request(
+    //         "analytics/usage/endpoints",
+    //         Some(params),
+    //         RequestOptions::default(),
+    //     )
+    //     .await
+    // }
 
-    pub async fn analytics_usage_services(
-        &self,
-        period: &AnalyticsUsagePeriod,
-    ) -> Result<AnalyticsUsageServicesResponse, FuryError> {
-        let mut params = HashMap::new();
-        params.insert("period".to_string(), period.to_string());
-        self.send_get_request(
-            "analytics/usage/services",
-            Some(params),
-            RequestOptions::default(),
-        )
-        .await
-    }
+    // pub async fn analytics_usage_services(
+    //     &self,
+    //     period: &AnalyticsUsagePeriod,
+    // ) -> Result<AnalyticsUsageServicesResponse, FuryError> {
+    //     let mut params = HashMap::new();
+    //     params.insert("period".to_string(), period.to_string());
+    //     self.send_get_request(
+    //         "analytics/usage/services",
+    //         Some(params),
+    //         RequestOptions::default(),
+    //     )
+    //     .await
+    // }
 
-    pub async fn analytics_usage_daily(
-        &self,
-        period: &AnalyticsUsagePeriod,
-    ) -> Result<AnalyticsUsageDailyResponse, FuryError> {
-        let mut params = HashMap::new();
-        params.insert("period".to_string(), period.to_string());
-        self.send_get_request(
-            "analytics/usage/daily",
-            Some(params),
-            RequestOptions::default(),
-        )
-        .await
-    }
+    // pub async fn analytics_usage_daily(
+    //     &self,
+    //     period: &AnalyticsUsagePeriod,
+    // ) -> Result<AnalyticsUsageDailyResponse, FuryError> {
+    //     let mut params = HashMap::new();
+    //     params.insert("period".to_string(), period.to_string());
+    //     self.send_get_request(
+    //         "analytics/usage/daily",
+    //         Some(params),
+    //         RequestOptions::default(),
+    //     )
+    //     .await
+    // }
 
     pub async fn generate_mint(&self) -> Result<GenerateMintResponse, FuryError> {
         self.send_get_request("utilities/generate-mint", None, RequestOptions::default())
@@ -691,6 +752,8 @@ impl FurySDK {
     where
         T: for<'de> Deserialize<'de>,
     {
+        // println!("text: {:#?}", response);
+
         if response.status().is_success() {
             match response.json().await {
                 Ok(body) => Ok(body),
