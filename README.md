@@ -30,10 +30,11 @@ fury-sdk = "0.1.0"
 ## Quick Start
 
 ```rust
+use anyhow::Result;
 use fury_sdk::sdk::FurySDK;
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<()> {
     let http_client = reqwest::Client::new();
     let client = FurySDK::new(http_client);
 
@@ -50,10 +51,12 @@ async fn main() -> anyhow::Result<()> {
 ### Buy Tokens
 
 ```rust
+use anyhow::Result;
+use anyhow::Result;
 use fury_sdk::sdk::{FurySDK, BuyTokenRequest};
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<()> {
     let http_client = reqwest::Client::new();
     let fury = FurySDK::new(http_client);
 
@@ -79,12 +82,13 @@ async fn main() -> anyhow::Result<()> {
 ### Complete Buy Flow with Transaction Signing
 
 ```rust
+use anyhow::Result;
 use fury_sdk::sdk::{FurySDK, BuyTokenRequest, TransactionSendRequest};
 use fury_sdk::utils::sign_transactions;
 use solana_sdk::{signature::Keypair, signer::Signer};
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<()> {
     // Initialize SDK
     let http_client = reqwest::Client::new();
     let fury = FurySDK::new(http_client);
@@ -123,10 +127,11 @@ async fn main() -> anyhow::Result<()> {
 ### Create a New Token
 
 ```rust
+use anyhow::Result;
 use fury_sdk::sdk::{FurySDK, TokenCreationConfig, TokenCreation, TokenCreationMetadata, TokensCreateRequest};
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<()> {
     let http_client = reqwest::Client::new();
     let fury = FurySDK::new(http_client);
 
@@ -158,10 +163,11 @@ async fn main() -> anyhow::Result<()> {
 ### Distribute Tokens to Multiple Wallets
 
 ```rust
+use anyhow::Result;
 use fury_sdk::sdk::{FurySDK, WalletsDistributeRequest, WalletsDistributeRecipient};
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<()> {
     let http_client = reqwest::Client::new();
     let fury = FurySDK::new(http_client);
 
@@ -235,7 +241,7 @@ Example:
 use fury_sdk::sdk::{FurySDK, WalletsDistributeRequest, WalletsDistributeRecipient};
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<()> {
     let http_client = reqwest::Client::new();
     let fury = FurySDK::new(http_client);
 
