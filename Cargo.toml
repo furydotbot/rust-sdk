@@ -1,7 +1,13 @@
 [package]
-name = "fury-rust-sdk"
+name = "fury-sdk"
 version = "0.1.0"
 edition = "2021"
+description = "A Rust client library for interacting with the FURY API service - a comprehensive toolkit for Solana token operations."
+license = "MIT"
+repository = "https://github.com/furydotbot/rust-sdk"
+readme = "README.md"
+keywords = ["sdk", "fury", "api"]
+categories = ["api-bindings", "development-tools"]
 
 [dependencies]
 anyhow = "1.0.98"

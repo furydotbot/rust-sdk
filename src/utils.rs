@@ -5,14 +5,14 @@ use solana_sdk::{
     signer::Signer,
     transaction::VersionedTransaction,
 };
+use std::sync::Arc;
 
 pub fn sign_transactions(
     serialized_txs: &Vec<String>,
-    signers: &Vec<Keypair>,
+    signers: &Vec<Arc<Keypair>>,
 ) -> Result<Vec<String>> {
     let mut res: Vec<String> = Vec::new();
     for serialized_tx in serialized_txs.iter() {
-        // Deserialize transaction
         let tx_buffer = bs58::decode(serialized_tx).into_vec().unwrap();
         let mut transaction = match bincode::deserialize::<VersionedTransaction>(&tx_buffer) {
             Ok(transaction) => transaction,
