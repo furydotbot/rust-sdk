@@ -784,7 +784,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "fury-sdk"
+name = "fury_sdk"
 version = "0.1.0"
 dependencies = [
  "anyhow",
