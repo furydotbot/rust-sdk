@@ -188,41 +188,6 @@ async fn main() -> Result<()> {
 }
 ```
 
-## API Reference
-
-### Main SDK Struct
-
-- `FurySDK::new(client: Client) -> Self` - Initialize the SDK with a reqwest client
-- `FurySDK::new_with_base_url(client: Client, base_url: &str) -> Self` - Initialize the SDK with custom base URL
-- `health_check() -> Result<HealthCheckResponse, FuryError>` - Check API health
-
-### Token Operations
-
-- `buy_token(data: &BuyTokenRequest) -> Result<BuyTokenResponse, FuryError>` - Buy tokens
-- `sell_token(data: &SellRequest) -> Result<SellResponse, FuryError>` - Sell tokens
-- `token_transfer(data: &TokenTransferRequest) -> Result<TokenTransferResponse, FuryError>` - Transfer tokens
-- `tokens_create(data: &TokensCreateRequest) -> Result<TokensCreateResponse, FuryError>` - Create a new token
-- `token_burn(data: &TokenBurnRequest) -> Result<TokenBurnResponse, FuryError>` - Burn tokens
-- `token_cleaner(data: &TokenCleanerRequest) -> Result<TokenCleanerResponse, FuryError>` - Execute buy/sell operations
-
-### Transaction Operations
-
-- `jito_transaction_send(data: &TransactionSendRequest) -> Result<JitoTransactionSendResponse, FuryError>` - Submit transactions via Jito
-- `rpc_transaction_send(data: &TransactionSendRequest) -> Result<RpcTransactionSendResponse, FuryError>` - Submit transactions via RPC
-
-### Analytics Operations
-
-- `analytics_pnl(addresses: Vec<String>, token_address: String, options: AnalyticsPnlOptions) -> Result<AnalyticsPnlResponse, FuryError>` - Calculate profit and loss
-
-### Utility Operations
-
-- `generate_mint() -> Result<GenerateMintResponse, FuryError>` - Generate a new mint public key
-
-### Wallet Operations
-
-- `wallets_distribute(data: &WalletsDistributeRequest) -> Result<WalletsDistributeResponse, FuryError>` - Distribute tokens to multiple wallets
-- `wallets_consolidate(data: &WalletsConsolidateRequest) -> Result<WalletsConsolidateResponse, FuryError>` - Consolidate tokens from multiple wallets
-
 ### Error Handling
 
 The SDK uses a custom `FuryError` enum for error handling:
